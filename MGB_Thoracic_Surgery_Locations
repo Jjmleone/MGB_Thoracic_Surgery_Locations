@@ -1,0 +1,56 @@
+import pandas as pd
+import folium
+from folium.plugins import MarkerCluster
+
+# Load the hospital data
+df = pd.read_csv("hospital_locations_with_coordinates.csv")
+
+# Define hospital groups
+bwh_hospitals = [
+    "Brigham and Womens Hospital",
+    "South Shore Hospital",
+    "Kent Hospital, Care New England",
+    "Milford Regional Medical Center",
+    "West Roxbury VA Medical Center",
+    "BWH Multi-D Clinic, Patriots Place",
+    "DFCI, Chestnut Hill",
+    "BWH Multi-D Clinic"
+]
+
+# Create a base map centered around Massachusetts
+m = folium.Map(location=[42.3, -71.5], zoom_start=8)
+
+# Add marker clustering
+marker_cluster = MarkerCluster().add_to(m)
+
+# Add markers to the map
+for _, row in df.iterrows():
+    name = row['Name']
+    address = row['Address']
+    surgeons = row['Surgeons']
+    lat = row['Latitude']
+    lon = row['Longitude']
+
+    # Determine marker color
+    color = 'blue' if name in bwh_hospitals else 'green'
+
+    # Create popup content
+    popup_html = f"""
+    <b>{name}</b><br>
+    {address}<br><br>
+    <b>Thoracic Surgeons:</b><br>{surgeons}
+    """
+
+    # Add marker
+    folium.CircleMarker(
+        location=[lat, lon],
+        radius=6,
+        color=color,
+        fill=True,
+        fill_color=color,
+        fill_opacity=0.8,
+        popup=folium.Popup(popup_html, max_width=300)
+    ).add_to(marker_cluster)
+
+# Save the map to an HTML file
+m.save("MGB_Thoracic_Surgery_Locations.html")
